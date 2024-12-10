@@ -1,11 +1,13 @@
-package main
+package encrypt
 
 import (
+	envFunc "AccountCreationService/envFuncs"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"golang.org/x/crypto/bcrypt"
 	"io"
 	"log"
 )
@@ -18,9 +20,9 @@ func Decode(b string) ([]byte, error) {
 	return base64.StdEncoding.DecodeString(b)
 }
 
-func encryptData(data string) (string, error) {
+func EncryptData(data string) (string, error) {
 
-	Secret, err := getEnvVar("S3CRET")
+	Secret, err := envFunc.GetEnvVar("S3CRET")
 	if err != nil {
 		log.Fatal("Error: %s", err)
 	}
@@ -43,9 +45,9 @@ func encryptData(data string) (string, error) {
 	return Encode(append(iv, cipherText...)), nil
 }
 
-func decryptData(eData string) (string, error) {
+func DecryptData(eData string) (string, error) {
 
-	Secret, err := getEnvVar("S3CRET")
+	Secret, err := envFunc.GetEnvVar("S3CRET")
 	if err != nil {
 		log.Fatal("Error: %s", err)
 	}
@@ -75,3 +77,17 @@ func decryptData(eData string) (string, error) {
 	return string(plainText), nil
 
 }
+
+func HashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 12)
+	return string(bytes), err
+}
+
+func VerifyPassword(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
+}
+
+//func VerifyEmail(password) bool {
+//
+//}
